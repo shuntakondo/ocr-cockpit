@@ -1,0 +1,255 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Upload,
+  Download,
+  AlertTriangle,
+  Loader2,
+  FileText,
+  Inbox,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/status-badge";
+import { cn, formatMoney } from "@/lib/utils";
+import {
+  DOCUMENT_STATUSES,
+  FIELD_SPECS,
+  LOW_CONFIDENCE_THRESHOLD,
+  statusLabel,
+  type DocumentRecord,
+  type DocumentStatus,
+} from "@/lib/types";
+
+function lowConfidenceCount(doc: DocumentRecord): number {
+  if (!doc.extraction) return 0;
+  return FIELD_SPECS.filter(
+    (s) => doc.extraction![s.key].confidence < LOW_CONFIDENCE_THRESHOLD,
+  ).length;
+}
+
+interface QueueViewProps {
+  initialDocuments: DocumentRecord[];
+  initialCounts: Record<string, number>;
+}
+
+export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
+  const router = useRouter();
+  const [documents, setDocuments] = useState(initialDocuments);
+  const [counts, setCounts] = useState(initialCounts);
+  const [filter, setFilter] = useState<DocumentStatus | "all">("all");
+  const [uploading, setUploading] = useState(false);
+  const [, startTransition] = useTransition();
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  async function refresh(next: DocumentStatus | "all" = filter) {
+    const qs = next === "all" ? "" : `?status=${next}`;
+    const res = await fetch(`/api/documents${qs}`);
+    const data = await res.json();
+    setDocuments(data.documents);
+    setCounts(data.counts);
+  }
+
+  function selectFilter(next: DocumentStatus | "all") {
+    setFilter(next);
+    startTransition(() => {
+      void refresh(next);
+    });
+  }
+
+  async function onFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const form = new FormData();
+        form.append("file", file);
+        await fetch("/api/documents", { method: "POST", body: form });
+      }
+      await refresh("all");
+      setFilter("all");
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
+
+  const exportHref = (format: "csv" | "accounting") => {
+    const status = filter === "all" ? "" : `&status=${filter}`;
+    return `/api/export?format=${format}${status}`;
+  };
+
+  return (
+    <div className="mx-auto max-w-6xl px-5 py-6">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">
+            Document queue
+          </h1>
+          <p className="mt-0.5 text-sm text-muted">
+            {total} document{total === 1 ? "" : "s"} · extract, review and export
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <a href={exportHref("csv")}>
+            <Button variant="secondary">
+              <Download size={15} /> CSV
+            </Button>
+          </a>
+          <a href={exportHref("accounting")}>
+            <Button variant="secondary">
+              <Download size={15} /> Accounting CSV
+            </Button>
+          </a>
+          <input
+            ref={fileInput}
+            type="file"
+            multiple
+            accept="application/pdf,image/*"
+            className="hidden"
+            onChange={(e) => onFiles(e.target.files)}
+          />
+          <Button
+            variant="primary"
+            onClick={() => fileInput.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <Upload size={15} />
+            )}
+            Upload
+          </Button>
+        </div>
+      </div>
+
+      {/* Status filter tabs */}
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        <FilterTab
+          label="All"
+          count={total}
+          active={filter === "all"}
+          onClick={() => selectFilter("all")}
+        />
+        {DOCUMENT_STATUSES.map((s) => (
+          <FilterTab
+            key={s}
+            label={statusLabel(s)}
+            count={counts[s] ?? 0}
+            active={filter === s}
+            onClick={() => selectFilter(s)}
+          />
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs text-muted">
+              <th className="px-4 py-2.5 font-medium">Status</th>
+              <th className="px-4 py-2.5 font-medium">Vendor</th>
+              <th className="px-4 py-2.5 font-medium">Invoice No.</th>
+              <th className="px-4 py-2.5 font-medium">Issue date</th>
+              <th className="px-4 py-2.5 text-right font-medium">Total</th>
+              <th className="px-4 py-2.5 font-medium">Flags</th>
+            </tr>
+          </thead>
+          <tbody>
+            {documents.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-16 text-center text-muted">
+                  <Inbox size={28} className="mx-auto mb-2 opacity-40" />
+                  No documents here yet. Upload an invoice or receipt to begin.
+                </td>
+              </tr>
+            )}
+            {documents.map((doc) => {
+              const e = doc.extraction;
+              const low = lowConfidenceCount(doc);
+              const warnings = e?.warnings.length ?? 0;
+              return (
+                <tr
+                  key={doc.id}
+                  onClick={() => router.push(`/documents/${doc.id}`)}
+                  className="cursor-pointer border-b border-border last:border-0 hover:bg-surface-2"
+                >
+                  <td className="px-4 py-3">
+                    <StatusBadge status={doc.status} />
+                  </td>
+                  <td className="px-4 py-3 font-medium">
+                    {e?.vendor.value ?? (
+                      <span className="flex items-center gap-1.5 text-muted">
+                        <FileText size={14} />
+                        {doc.originalFilename}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-muted">
+                    {e?.invoiceNumber.value ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-muted">
+                    {e?.issueDate.value ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {e
+                      ? formatMoney(e.total.value, e.currency.value)
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {(low > 0 || warnings > 0) && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                          warnings > 0
+                            ? "bg-danger-soft text-danger"
+                            : "bg-warn-soft text-warn",
+                        )}
+                      >
+                        <AlertTriangle size={12} />
+                        {warnings > 0
+                          ? `${warnings} issue${warnings === 1 ? "" : "s"}`
+                          : `${low} to review`}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function FilterTab({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition",
+        active
+          ? "border-accent bg-accent-soft text-accent"
+          : "border-border bg-surface text-muted hover:bg-surface-2",
+      )}
+    >
+      {label}
+      <span className="tabular-nums opacity-70">{count}</span>
+    </button>
+  );
+}
