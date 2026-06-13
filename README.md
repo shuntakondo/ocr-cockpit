@@ -134,6 +134,26 @@ is gitignored — never commit keys.
 - Uploaded files live in `storage/uploads/` (gitignored); the embedded database
   lives in `.pglite/` (gitignored).
 
+## Security & trust model
+
+This is a **single-user, local demo**. The API has **no authentication and no rate
+limiting by design** — do not expose it to untrusted users as-is.
+
+What *is* hardened (so the demo is safe to run and read):
+
+- Parameterized SQL throughout the repository (no string-built queries).
+- File serving is path-traversal-guarded (basename only) and served under a strict
+  `default-src 'none'` CSP + `nosniff` + sandbox, so user SVGs can't execute script.
+- Uploads are limited to a MIME allowlist (PDF / common image types) and 15 MB.
+- CSV exports neutralize spreadsheet formula injection (leading `= + - @`).
+- Provider URLs are validated: the Azure endpoint must be HTTPS and the async
+  polling URL is pinned to that same origin (SSRF guard); `OLLAMA_BASE_URL` must
+  be http(s). LLM output is validated with Zod before use.
+
+Before multi-tenant / production use, add: authentication & sessions, per-user
+rate limiting and storage quotas, a bounded extraction queue (cap concurrent
+Ollama/Azure calls), and magic-byte content sniffing on uploads.
+
 ## License
 
 MIT
