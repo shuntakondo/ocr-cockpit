@@ -106,23 +106,35 @@ Set `EXTRACTION_PROVIDER` in `.env` (see `.env.example`).
 | Provider | Cost | Notes |
 |---|---|---|
 | `mock` (default) | free | Deterministic. Returns the sample ground truth with a couple of fields perturbed/low-confidence so the review flow is realistic; synthesizes plausible data for real uploads. No services needed. |
-| `ollama` | free / local | `OLLAMA_MODE=vision` sends the image to a multimodal model (`ollama pull llama3.2-vision`). `OLLAMA_MODE=text` OCRs the document (unpdf / tesseract.js) then structures it with a text model — works with the `llama3.2` you already have. |
+| `ollama` | free / local | **`OLLAMA_MODE=vision`** sends the image to a multimodal model — best accuracy, layout-aware, reads Japanese. Recommended: `ollama pull qwen2.5vl:7b`. SVGs are rasterized and large images downscaled automatically (`OLLAMA_MAX_IMAGE_PX`) so inference stays fast. **`OLLAMA_MODE=text`** OCRs the document (unpdf / tesseract.js) then structures it with a text model — no extra download (works with `llama3.2`), good for English. |
 | `azure` | paid | Azure AI Document Intelligence `prebuilt-invoice` / `prebuilt-receipt`. Returns field-level confidence natively. Needs `AZURE_DI_ENDPOINT` + `AZURE_DI_KEY`. |
 
 You can override per request: `POST /api/documents/:id/extract?provider=ollama`.
 
-**Verified locally** with the free stack (tesseract.js + the 3B `llama3.2`): clean
-invoices extract vendor, dates, currency, subtotal/tax/total and line items
-correctly — including documents not in the sample set. The parser tolerates messy
-LLM output (missing / null / bare-scalar / `"¥1,000"` fields are coerced, never
-crash the extraction), and a regex backstop recovers the invoice number when the
-small model drops it. Try it yourself: `tsx scripts/try-extract.ts <file> ollama`.
+**Verified locally, end to end (free, no cloud):**
 
-**On confidence:** the per-field confidence is **native and calibrated only with
-Azure** Document Intelligence. With the Ollama text path it is the model's
-self-report — treat it as a hint, not a guarantee. For higher accuracy and
-layout understanding, use a vision model (`ollama pull llama3.2-vision`, then
-`OLLAMA_MODE=vision`) or Azure.
+- **English** — both the text path (tesseract.js + `llama3.2`) and the vision path
+  extract vendor, invoice no., dates, currency, subtotal/tax/total and line items
+  correctly, including documents not in the sample set.
+- **Japanese** — `qwen2.5vl:7b` (vision) extracted a Japanese 適格請求書 **100%**:
+  exact vendor (株式会社…), the registration-number-based invoice no., all amounts
+  and every line item, no hallucination. The small text-OCR path and small vision
+  models (minicpm-v) are *not* reliable on Japanese — use `qwen2.5vl` for it.
+
+The parser tolerates messy LLM output (missing / null / bare-scalar / `"¥1,000"`
+fields are coerced, never crash the extraction); a regex backstop recovers the
+invoice number when a small model drops it; and vision inputs are rasterized
+(SVG) and downscaled automatically so they stay fast. Try it:
+`tsx scripts/try-extract.ts <file> ollama`.
+
+**On confidence:** per-field confidence is **native and calibrated only with
+Azure** Document Intelligence. On the Ollama paths it is the model's self-report —
+a hint, not a guarantee.
+
+**Cost of the local path:** vision inference is ~1 min/document on CPU; tune
+`OLLAMA_MAX_IMAGE_PX` (speed vs. small-text legibility) and `OLLAMA_TIMEOUT_MS`.
+For volume / SLAs and calibrated confidence, Azure Document Intelligence is the
+production option.
 
 ## Selling it (Lite / Standard / Pro)
 
