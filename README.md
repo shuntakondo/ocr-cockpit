@@ -111,6 +111,19 @@ Set `EXTRACTION_PROVIDER` in `.env` (see `.env.example`).
 
 You can override per request: `POST /api/documents/:id/extract?provider=ollama`.
 
+**Verified locally** with the free stack (tesseract.js + the 3B `llama3.2`): clean
+invoices extract vendor, dates, currency, subtotal/tax/total and line items
+correctly — including documents not in the sample set. The parser tolerates messy
+LLM output (missing / null / bare-scalar / `"¥1,000"` fields are coerced, never
+crash the extraction), and a regex backstop recovers the invoice number when the
+small model drops it. Try it yourself: `tsx scripts/try-extract.ts <file> ollama`.
+
+**On confidence:** the per-field confidence is **native and calibrated only with
+Azure** Document Intelligence. With the Ollama text path it is the model's
+self-report — treat it as a hint, not a guarantee. For higher accuracy and
+layout understanding, use a vision model (`ollama pull llama3.2-vision`, then
+`OLLAMA_MODE=vision`) or Azure.
+
 ## Selling it (Lite / Standard / Pro)
 
 The same codebase sells in three tiers, matching how the real postings escalate:
