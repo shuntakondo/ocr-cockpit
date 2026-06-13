@@ -1,0 +1,32 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# local data (uploaded files, embedded postgres) — never commit
+/storage/uploads/
+/.pglite/
+*.db
+
+# os / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+*.log
+npm-debug.log*
+
+# generated sample files are committed (self-authored fakes); uploads are not
+!/storage/samples/
