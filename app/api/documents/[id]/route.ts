@@ -39,7 +39,12 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   const existing = await getDocument(id);
   if (!existing) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
-  const body = (await req.json().catch(() => ({}))) as PatchBody;
+  let body: PatchBody;
+  try {
+    body = (await req.json()) as PatchBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
   const patch: {
     extraction?: ExtractionData;
     status?: DocumentStatus;

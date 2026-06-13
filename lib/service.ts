@@ -22,11 +22,14 @@ export function applyVendorRule(
   rule: VendorRule,
 ): ExtractionData {
   const next = structuredClone(data);
+  // Treat a rule-applied value as the new baseline (providerValue === value) so
+  // it reads as an automated default, not a human edit, and stays consistent
+  // when normalizeExtraction recomputes edited-flags later.
   if (rule.accountCode && !next.accountCode.value) {
     next.accountCode = {
       value: rule.accountCode,
       confidence: 0.9,
-      providerValue: next.accountCode.providerValue,
+      providerValue: rule.accountCode,
       edited: false,
     };
   }
@@ -34,7 +37,7 @@ export function applyVendorRule(
     next.taxRate = {
       value: rule.taxRate,
       confidence: 0.9,
-      providerValue: next.taxRate.providerValue,
+      providerValue: rule.taxRate,
       edited: false,
     };
   }

@@ -174,7 +174,7 @@ export async function deleteDocument(id: string): Promise<void> {
 
 export async function countByStatus(): Promise<Record<string, number>> {
   const db = await getDb();
-  const { rows } = await db.query<{ status: string; n: string }>(
+  const { rows } = await db.query<{ status: string; n: number }>(
     `SELECT status, COUNT(*)::int AS n FROM documents GROUP BY status`,
   );
   const out: Record<string, number> = {};
