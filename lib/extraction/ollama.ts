@@ -7,6 +7,7 @@ import {
 } from "@/lib/extraction/schema";
 import type { ExtractionData } from "@/lib/types";
 import { documentToText } from "@/lib/ocr";
+import { backfillFromText } from "@/lib/extraction/postprocess";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Local, free extraction via Ollama.
@@ -118,6 +119,8 @@ export class OllamaProvider implements ExtractionProvider {
         parsed.error,
       );
     }
-    return buildExtractionData(parsed.data, "ollama", rawText, new Date().toISOString());
+    return backfillFromText(
+      buildExtractionData(parsed.data, "ollama", rawText, new Date().toISOString()),
+    );
   }
 }
