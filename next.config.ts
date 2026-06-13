@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "tesseract.js",
     "pg",
     "unpdf",
+    "sharp",
   ],
 };
 

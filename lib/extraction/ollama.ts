@@ -8,6 +8,7 @@ import {
 import type { ExtractionData } from "@/lib/types";
 import { documentToText } from "@/lib/ocr";
 import { backfillFromText } from "@/lib/extraction/postprocess";
+import { downscaleForVision } from "@/lib/extraction/image-prep";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Local, free extraction via Ollama.
@@ -59,15 +60,19 @@ export class OllamaProvider implements ExtractionProvider {
     let rawText: string | null = null;
 
     if (mode === "vision") {
-      images = [Buffer.from(input.bytes).toString("base64")];
+      // Rasterize SVG / downscale large images so the vision model stays fast.
+      const prepared = await downscaleForVision(input.bytes, input.mimeType);
+      images = [Buffer.from(prepared.bytes).toString("base64")];
       userContent = `Extract the accounts-payable fields from this ${input.kind}.`;
     } else {
       rawText = await documentToText(input.bytes, input.mimeType);
       userContent = `Extract the accounts-payable fields from this ${input.kind}.\n\nDocument text:\n${rawText}`;
     }
 
+    // Vision models can be slow to load + run; allow overriding the timeout.
+    const timeoutMs = Number(process.env.OLLAMA_TIMEOUT_MS) || 120_000;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120_000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     let json: { message?: { content?: string } };
     try {
       const res = await fetch(`${baseUrl}/api/chat`, {
@@ -96,7 +101,7 @@ export class OllamaProvider implements ExtractionProvider {
       if (err instanceof ExtractionError) throw err;
       if (err instanceof Error && err.name === "AbortError") {
         throw new ExtractionError(
-          `Ollama request timed out after 120s (model "${model}").`,
+          `Ollama request timed out after ${Math.round(timeoutMs / 1000)}s (model "${model}"). Set OLLAMA_TIMEOUT_MS higher for large vision models.`,
           "ollama",
           err,
         );
