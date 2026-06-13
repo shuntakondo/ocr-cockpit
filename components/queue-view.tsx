@@ -29,6 +29,11 @@ function lowConfidenceCount(doc: DocumentRecord): number {
   ).length;
 }
 
+// An anchor styled like a secondary button — keeps proper link semantics for
+// file downloads (avoids a <button> nested inside an <a>).
+const LINK_BUTTON =
+  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-surface-2";
+
 interface QueueViewProps {
   initialDocuments: DocumentRecord[];
   initialCounts: Record<string, number>;
@@ -94,15 +99,19 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <a href={exportHref("csv")}>
-            <Button variant="secondary">
-              <Download size={15} /> CSV
-            </Button>
+          <a
+            href={exportHref("csv")}
+            className={LINK_BUTTON}
+            aria-label="Export current view as CSV"
+          >
+            <Download size={15} /> CSV
           </a>
-          <a href={exportHref("accounting")}>
-            <Button variant="secondary">
-              <Download size={15} /> Accounting CSV
-            </Button>
+          <a
+            href={exportHref("accounting")}
+            className={LINK_BUTTON}
+            aria-label="Export current view as accounting CSV"
+          >
+            <Download size={15} /> Accounting CSV
           </a>
           <input
             ref={fileInput}
@@ -116,6 +125,7 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
             variant="primary"
             onClick={() => fileInput.current?.click()}
             disabled={uploading}
+            aria-label="Upload documents (PDF or image)"
           >
             {uploading ? (
               <Loader2 size={15} className="animate-spin" />
@@ -151,12 +161,12 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted">
-              <th className="px-4 py-2.5 font-medium">Status</th>
-              <th className="px-4 py-2.5 font-medium">Vendor</th>
-              <th className="px-4 py-2.5 font-medium">Invoice No.</th>
-              <th className="px-4 py-2.5 font-medium">Issue date</th>
-              <th className="px-4 py-2.5 text-right font-medium">Total</th>
-              <th className="px-4 py-2.5 font-medium">Flags</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Status</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Vendor</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Invoice No.</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Issue date</th>
+              <th scope="col" className="px-4 py-2.5 text-right font-medium">Total</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Flags</th>
             </tr>
           </thead>
           <tbody>
@@ -175,8 +185,17 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
               return (
                 <tr
                   key={doc.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Review ${e?.vendor.value ?? doc.originalFilename}`}
                   onClick={() => router.push(`/documents/${doc.id}`)}
-                  className="cursor-pointer border-b border-border last:border-0 hover:bg-surface-2"
+                  onKeyDown={(ev) => {
+                    if (ev.key === "Enter" || ev.key === " ") {
+                      ev.preventDefault();
+                      router.push(`/documents/${doc.id}`);
+                    }
+                  }}
+                  className="cursor-pointer border-b border-border last:border-0 hover:bg-surface-2 focus-visible:bg-surface-2"
                 >
                   <td className="px-4 py-3">
                     <StatusBadge status={doc.status} />

@@ -15,6 +15,7 @@ import {
   Loader2,
   Keyboard,
   ArrowLeft,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
@@ -523,10 +524,10 @@ function ReviewPanel({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-surface-2 text-left text-[11px] text-muted">
-                <th className="px-3 py-1.5 font-medium">Description</th>
-                <th className="px-3 py-1.5 text-right font-medium">Qty</th>
-                <th className="px-3 py-1.5 text-right font-medium">Unit</th>
-                <th className="px-3 py-1.5 text-right font-medium">Amount</th>
+                <th scope="col" className="px-3 py-1.5 font-medium">Description</th>
+                <th scope="col" className="px-3 py-1.5 text-right font-medium">Qty</th>
+                <th scope="col" className="px-3 py-1.5 text-right font-medium">Unit</th>
+                <th scope="col" className="px-3 py-1.5 text-right font-medium">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -608,11 +609,30 @@ function ShortcutHelp({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shortcut-help-title"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") onClose();
+        }}
         className="w-full max-w-sm rounded-xl border border-border bg-surface p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-          <Keyboard size={16} /> Keyboard shortcuts
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span
+            id="shortcut-help-title"
+            className="flex items-center gap-2 text-sm font-semibold"
+          >
+            <Keyboard size={16} /> Keyboard shortcuts
+          </span>
+          <button
+            autoFocus
+            onClick={onClose}
+            aria-label="Close keyboard shortcuts"
+            className="rounded-md p-1 text-muted hover:bg-surface-2 hover:text-ink"
+          >
+            <X size={16} />
+          </button>
         </div>
         <ul className="space-y-2">
           {rows.map(([k, label]) => (
