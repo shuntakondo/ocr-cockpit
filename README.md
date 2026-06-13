@@ -22,6 +22,22 @@ replaces the typing with review.
 
 ---
 
+## Screenshots
+
+**Document queue** — extract / review / export, with status filters, counts and per-document flags.
+
+![Document queue](docs/screenshots/queue.png)
+
+**Review cockpit** — document preview beside the extracted fields, each with model confidence. Low-confidence fields are flagged "· review" and the consistency checks catch mismatches (here the extracted total doesn't match subtotal + tax).
+
+![Review cockpit](docs/screenshots/review.png)
+
+**Keyboard-first** — the whole review loop runs from the keyboard.
+
+![Keyboard shortcuts](docs/screenshots/shortcuts.png)
+
+> Screenshots are generated from the running app with Playwright: `npm run start` then `npm run screenshots` ([scripts/screenshots.mjs](scripts/screenshots.mjs)).
+
 ## Features
 
 - **Two-pane review cockpit** — document preview beside editable fields, grouped
