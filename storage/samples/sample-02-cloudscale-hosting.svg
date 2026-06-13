@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="710" viewBox="0 0 760 710" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="710" fill="#ffffff"/>
+  <rect x="0" y="0" width="760" height="8" fill="#2563eb"/>
+
+  <text x="40" y="64" font-size="22" font-weight="700" fill="#1f2937">CloudScale Hosting Inc.</text>
+  <text x="40" y="86" font-size="12" fill="#6b7280">1200 Market St, San Francisco, CA 94102</text>
+  <text x="40" y="104" font-size="12" fill="#6b7280">Tax ID: US-94-3271188</text>
+
+  <text x="720" y="60" font-size="28" font-weight="700" fill="#2563eb" text-anchor="end">INVOICE</text>
+  <text x="720" y="86" font-size="13" fill="#1f2937" text-anchor="end">No. CS-INV-77213</text>
+  <text x="720" y="106" font-size="12" fill="#6b7280" text-anchor="end">Issued: 2026-05-01</text>
+  <text x="720" y="124" font-size="12" fill="#6b7280" text-anchor="end">Due: 2026-05-15</text>
+
+  <text x="40" y="170" font-size="11" fill="#6b7280">BILL TO</text>
+  <text x="40" y="190" font-size="14" fill="#1f2937">Aoyama Design Studio</text>
+
+  <line x1="40" y1="360" x2="720" y2="360" stroke="#2563eb" stroke-width="2"/>
+  <text x="52" y="382" font-size="11" font-weight="700" fill="#6b7280">DESCRIPTION</text>
+  <text x="510" y="382" font-size="11" font-weight="700" fill="#6b7280" text-anchor="end">QTY</text>
+  <text x="610" y="382" font-size="11" font-weight="700" fill="#6b7280" text-anchor="end">UNIT</text>
+  <text x="708" y="382" font-size="11" font-weight="700" fill="#6b7280" text-anchor="end">AMOUNT</text>
+
+    <text x="52" y="396" font-size="13" fill="#1f2937">Compute (8 vCPU plan) — May 2026</text>
+    <text x="510" y="396" font-size="13" fill="#1f2937" text-anchor="end">1</text>
+    <text x="610" y="396" font-size="13" fill="#1f2937" text-anchor="end">USD 320.00</text>
+    <text x="708" y="396" font-size="13" fill="#1f2937" text-anchor="end">USD 320.00</text>
+<rect x="40" y="406" width="680" height="30" fill="#f9fafb"/>
+    <text x="52" y="426" font-size="13" fill="#1f2937">Object storage 2TB</text>
+    <text x="510" y="426" font-size="13" fill="#1f2937" text-anchor="end">1</text>
+    <text x="610" y="426" font-size="13" fill="#1f2937" text-anchor="end">USD 46.00</text>
+    <text x="708" y="426" font-size="13" fill="#1f2937" text-anchor="end">USD 46.00</text>
+
+    <text x="52" y="456" font-size="13" fill="#1f2937">Egress bandwidth</text>
+    <text x="510" y="456" font-size="13" fill="#1f2937" text-anchor="end">1</text>
+    <text x="610" y="456" font-size="13" fill="#1f2937" text-anchor="end">USD 18.00</text>
+    <text x="708" y="456" font-size="13" fill="#1f2937" text-anchor="end">USD 18.00</text>
+  <line x1="40" y1="502" x2="720" y2="502" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="580" y="528" font-size="13" fill="#6b7280" text-anchor="end">Subtotal</text>
+  <text x="708" y="528" font-size="13" fill="#1f2937" text-anchor="end">USD 384.00</text>
+  <text x="580" y="552" font-size="13" fill="#6b7280" text-anchor="end">Tax (0%)</text>
+  <text x="708" y="552" font-size="13" fill="#1f2937" text-anchor="end">USD 0.00</text>
+  <line x1="520" y1="566" x2="720" y2="566" stroke="#1f2937" stroke-width="1"/>
+  <text x="580" y="590" font-size="15" font-weight="700" fill="#1f2937" text-anchor="end">Total</text>
+  <text x="708" y="590" font-size="15" font-weight="700" fill="#2563eb" text-anchor="end">USD 384.00</text>
+
+  <text x="40" y="640" font-size="12" fill="#6b7280">Payment terms: Due on receipt</text>
+  <text x="40" y="660" font-size="11" fill="#6b7280">This is a fictional sample document generated for the OCR Cockpit demo.</text>
+</svg>
