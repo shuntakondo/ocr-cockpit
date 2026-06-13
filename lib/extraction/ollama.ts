@@ -59,7 +59,12 @@ export class OllamaProvider implements ExtractionProvider {
     let images: string[] | undefined;
     let rawText: string | null = null;
 
-    if (mode === "vision") {
+    // Vision models can't consume PDF bytes directly, and digital PDFs carry
+    // exact embedded text — so always route PDFs through the text path.
+    const isPdf = input.mimeType === "application/pdf";
+    const useVision = mode === "vision" && !isPdf;
+
+    if (useVision) {
       // Rasterize SVG / downscale large images so the vision model stays fast.
       const prepared = await downscaleForVision(input.bytes, input.mimeType);
       images = [Buffer.from(prepared.bytes).toString("base64")];

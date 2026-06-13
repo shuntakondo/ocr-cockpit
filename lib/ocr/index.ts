@@ -22,10 +22,10 @@ export async function documentToText(
   mimeType: string,
 ): Promise<string> {
   if (mimeType === "application/pdf") {
-    const text = await extractPdfText(bytes);
-    // A scanned PDF yields little/no embedded text — fall back to OCR.
-    if (text.trim().length > 20) return text;
-    return ocrImage(bytes);
+    // Digital PDFs carry exact embedded text. (Scanned PDFs with no text layer
+    // need page rasterization, which tesseract can't do on PDF bytes — that path
+    // is a known gap; convert such PDFs to an image for now.)
+    return extractPdfText(bytes);
   }
   if (mimeType === "image/svg+xml") {
     return extractSvgText(bytes);
