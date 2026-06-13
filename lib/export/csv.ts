@@ -1,10 +1,17 @@
 import type { DocumentRecord, FieldKey } from "@/lib/types";
 import { statusLabel } from "@/lib/types";
 
-/** Quote a CSV cell when it contains a comma, quote, or newline. */
+/**
+ * Render a CSV cell: neutralize spreadsheet formula injection (a leading
+ * = + - @ or control char is prefixed with an apostrophe), then quote when the
+ * value contains a comma, quote, or newline.
+ */
 export function csvCell(value: unknown): string {
   if (value == null) return "";
-  const s = String(value);
+  let s = String(value);
+  if (/^[=+\-@\t\r]/.test(s)) {
+    s = `'${s}`;
+  }
   if (/[",\n\r]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }

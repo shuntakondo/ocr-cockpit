@@ -137,6 +137,18 @@ export class AzureProvider implements ExtractionProvider {
       );
     }
 
+    // Validate the configured endpoint: must be a well-formed HTTPS URL. The
+    // polling URL returned later is then pinned to this same origin (SSRF guard).
+    let endpointUrl: URL;
+    try {
+      endpointUrl = new URL(endpoint);
+    } catch {
+      throw new ExtractionError("AZURE_DI_ENDPOINT is not a valid URL.", "azure");
+    }
+    if (endpointUrl.protocol !== "https:") {
+      throw new ExtractionError("AZURE_DI_ENDPOINT must use https.", "azure");
+    }
+
     const base = endpoint.replace(/\/$/, "");
     const analyzeUrl = `${base}/documentintelligence/documentModels/${model}:analyze?api-version=${API_VERSION}`;
 
@@ -162,6 +174,20 @@ export class AzureProvider implements ExtractionProvider {
     const opLocation = start.headers.get("operation-location");
     if (!opLocation) {
       throw new ExtractionError("Azure did not return an Operation-Location.", "azure");
+    }
+    // SSRF guard: the polling URL must point at the same origin we configured,
+    // never an arbitrary host injected into the response header.
+    let pollUrl: URL;
+    try {
+      pollUrl = new URL(opLocation);
+    } catch {
+      throw new ExtractionError("Azure returned an invalid Operation-Location.", "azure");
+    }
+    if (pollUrl.origin !== endpointUrl.origin) {
+      throw new ExtractionError(
+        "Azure Operation-Location origin does not match the configured endpoint.",
+        "azure",
+      );
     }
 
     // Poll for the result.

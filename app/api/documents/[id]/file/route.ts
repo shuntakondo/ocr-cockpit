@@ -26,8 +26,10 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
   return new NextResponse(new Uint8Array(bytes), {
     headers: {
       "Content-Type": contentType,
-      // Harden against any active content in user-supplied SVG/HTML.
-      "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+      // Harden against any active content in user-supplied SVG/HTML: deny
+      // everything, allow only inline styles (needed to render SVG), sandbox it.
+      "Content-Security-Policy":
+        "default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; script-src 'none'; sandbox",
       "X-Content-Type-Options": "nosniff",
       "Cache-Control": "private, max-age=60",
     },

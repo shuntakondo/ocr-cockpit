@@ -41,6 +41,18 @@ export class OllamaProvider implements ExtractionProvider {
     const model = process.env.OLLAMA_MODEL || "llama3.2";
     const mode = (process.env.OLLAMA_MODE || "text").toLowerCase();
 
+    // Validate the configured base URL before using it in a request (guards
+    // against a malformed or non-http(s) OLLAMA_BASE_URL).
+    let parsedBase: URL;
+    try {
+      parsedBase = new URL(baseUrl);
+    } catch {
+      throw new ExtractionError(`OLLAMA_BASE_URL is not a valid URL: ${baseUrl}`, "ollama");
+    }
+    if (parsedBase.protocol !== "http:" && parsedBase.protocol !== "https:") {
+      throw new ExtractionError("OLLAMA_BASE_URL must use http or https.", "ollama");
+    }
+
     let userContent: string;
     let images: string[] | undefined;
     let rawText: string | null = null;
@@ -81,6 +93,13 @@ export class OllamaProvider implements ExtractionProvider {
       json = (await res.json()) as { message?: { content?: string } };
     } catch (err) {
       if (err instanceof ExtractionError) throw err;
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new ExtractionError(
+          `Ollama request timed out after 120s (model "${model}").`,
+          "ollama",
+          err,
+        );
+      }
       throw new ExtractionError(
         `Could not reach Ollama at ${baseUrl}.`,
         "ollama",

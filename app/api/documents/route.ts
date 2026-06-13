@@ -25,6 +25,16 @@ export async function GET(req: NextRequest) {
 
 const MAX_BYTES = 15 * 1024 * 1024; // 15 MB
 
+const ALLOWED_MIME = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+  "image/tiff",
+]);
+
 // POST /api/documents  (multipart) → upload a new document
 export async function POST(req: NextRequest) {
   const form = await req.formData().catch(() => null);
@@ -42,12 +52,21 @@ export async function POST(req: NextRequest) {
 
   const kind = (form.get("kind") as DocumentKind) || "invoice";
   const original = sanitizeFilename(file.name || "upload");
+  const mimeType = file.type || contentTypeFor(original, "application/octet-stream");
+
+  // Allowlist by resolved type — reject anything that is not a supported
+  // document/image format.
+  if (!ALLOWED_MIME.has(mimeType)) {
+    return NextResponse.json(
+      { error: `Unsupported file type: ${mimeType}. Upload a PDF or image.` },
+      { status: 415 },
+    );
+  }
+
   const storageName = `${crypto.randomUUID()}-${original}`;
   const bytes = new Uint8Array(await file.arrayBuffer());
 
   await saveUpload(storageName, bytes);
-
-  const mimeType = file.type || contentTypeFor(original, "application/octet-stream");
   const doc = await createDocument({
     filename: storageName,
     originalFilename: original,
