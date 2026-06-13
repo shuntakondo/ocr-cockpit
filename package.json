@@ -10,7 +10,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx scripts/seed.ts",
-    "samples:generate": "tsx scripts/generate-samples.ts"
+    "samples:generate": "tsx scripts/generate-samples.ts",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.17",
@@ -33,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "playwright": "^1.60.0",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
     "typescript": "^5"
