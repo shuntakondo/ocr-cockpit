@@ -76,6 +76,10 @@ export function ReviewCockpit({
   const prevId = idx > 0 ? queueIds[idx - 1] : null;
   const nextId = idx >= 0 && idx < queueIds.length - 1 ? queueIds[idx + 1] : null;
 
+  // Most recent extraction error (audit is ordered newest-first), shown
+  // persistently when the document is in an error state.
+  const lastError = audit.find((a) => a.action === "error")?.detail ?? null;
+
   const lowCount = extraction
     ? FIELD_SPECS.filter(
         (s) => extraction[s.key].confidence < LOW_CONFIDENCE_THRESHOLD,
@@ -364,6 +368,11 @@ export function ReviewCockpit({
       {error && (
         <div className="flex items-center gap-2 bg-danger-soft px-5 py-1.5 text-xs font-medium text-danger">
           <AlertTriangle size={13} /> {error}
+        </div>
+      )}
+      {!error && doc.status === "error" && lastError && (
+        <div className="flex items-center gap-2 bg-danger-soft px-5 py-1.5 text-xs font-medium text-danger">
+          <AlertTriangle size={13} /> {lastError}
         </div>
       )}
 
