@@ -53,6 +53,22 @@ The pipeline refuses rather than hallucinating a fake invoice:
   clear error (and the reason persists on reload). True scanned-PDF support (rasterize
   pages → vision) is the planned follow-up.
 
+## Test fixtures (source PDFs)
+
+The exact PDFs used, in [`fixtures/`](fixtures/) — all fictional, no PII. Drag any of
+them into the app's Upload dialog to reproduce a row above.
+
+| File | Type | Pages |
+|---|---|---|
+| [`invoice-digital.pdf`](fixtures/invoice-digital.pdf) | Digital invoice (English) | 1 |
+| [`invoice-2pages-single.pdf`](fixtures/invoice-2pages-single.pdf) | One invoice, 34 line items spanning 2 pages | 2 |
+| [`invoice-3-companies.pdf`](fixtures/invoice-3-companies.pdf) | Three different invoices in one PDF | 3 |
+| [`invoice-jp-tekikaku.pdf`](fixtures/invoice-jp-tekikaku.pdf) | Japanese 適格請求書 (registration no. + tax) | 1 |
+| [`receipt.pdf`](fixtures/receipt.pdf) | Receipt | 1 |
+| [`non-invoice-letter.pdf`](fixtures/non-invoice-letter.pdf) | Business letter (not an invoice) | 1 |
+| [`non-invoice-resume.pdf`](fixtures/non-invoice-resume.pdf) | Résumé (not an invoice) | 1 |
+| [`scanned-image-only.pdf`](fixtures/scanned-image-only.pdf) | Invoice rendered as an image — **no text layer** | 1 |
+
 ## Reproduce
 
 Start the app with the local engine, then run an upload + extract for each fixture and
