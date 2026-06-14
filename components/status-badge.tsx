@@ -3,7 +3,7 @@ import { statusLabel, type DocumentStatus } from "@/lib/types";
 
 const styles: Record<DocumentStatus, string> = {
   uploaded: "bg-surface-2 text-muted border-border",
-  processing: "bg-accent-soft text-accent border-accent/30",
+  processing: "bg-accent-soft text-accent border-accent/30 animate-pulse",
   needs_review: "bg-warn-soft text-warn border-warn/30",
   approved: "bg-ok-soft text-ok border-ok/30",
   exported: "bg-accent-soft text-accent border-accent/30",

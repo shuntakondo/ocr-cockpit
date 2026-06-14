@@ -61,6 +61,42 @@
   }
 }
 
+/* Indeterminate progress bar (upload / extraction "working" state) */
+@keyframes ocr-indeterminate {
+  0% {
+    left: -45%;
+    width: 45%;
+  }
+  50% {
+    left: 35%;
+    width: 55%;
+  }
+  100% {
+    left: 100%;
+    width: 45%;
+  }
+}
+.ocr-progress {
+  position: relative;
+  overflow: hidden;
+}
+.ocr-progress > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 9999px;
+  background: var(--accent);
+  animation: ocr-indeterminate 1.15s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ocr-progress > span {
+    animation: none;
+    left: 0;
+    width: 100%;
+    opacity: 0.55;
+  }
+}
+
 /* Keyboard hint key caps */
 kbd {
   display: inline-block;

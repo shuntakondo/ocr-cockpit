@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ProgressBar } from "@/components/ui/progress";
 
 type ItemStatus = "uploading" | "done" | "error";
 interface UploadItem {
@@ -141,9 +142,10 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
           role="button"
           tabIndex={0}
           aria-label="Drag and drop files here, or activate to browse"
-          onClick={() => fileInput.current?.click()}
+          aria-busy={busy}
+          onClick={() => !busy && fileInput.current?.click()}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
+            if (!busy && (e.key === "Enter" || e.key === " ")) {
               e.preventDefault();
               fileInput.current?.click();
             }
@@ -176,17 +178,34 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
               : "border-border bg-surface-2 hover:bg-accent-soft/40",
           )}
         >
-          <div className="pointer-events-none flex flex-col items-center gap-2">
+          <div className="pointer-events-none flex w-full flex-col items-center gap-2">
             <UploadCloud
               size={28}
-              className={dragActive ? "text-accent" : "text-muted"}
+              className={cn(
+                busy
+                  ? "animate-pulse text-accent"
+                  : dragActive
+                    ? "text-accent"
+                    : "text-muted",
+              )}
             />
-            <span className="text-sm font-medium text-ink">
-              Drag &amp; drop invoices or receipts here
-            </span>
-            <span className="text-xs text-muted">
-              or click to browse — PDF, PNG, JPG (max 15 MB each)
-            </span>
+            {busy ? (
+              <>
+                <span className="text-sm font-medium text-ink">
+                  Importing {items.length} file{items.length === 1 ? "" : "s"}…
+                </span>
+                <ProgressBar className="mt-1 w-2/3" />
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-medium text-ink">
+                  Drag &amp; drop invoices or receipts here
+                </span>
+                <span className="text-xs text-muted">
+                  or click to browse — PDF, PNG, JPG (max 15 MB each)
+                </span>
+              </>
+            )}
           </div>
         </div>
 

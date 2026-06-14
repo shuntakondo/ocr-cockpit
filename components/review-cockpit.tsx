@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { FieldRow } from "@/components/field-row";
 import { DocumentPreview } from "@/components/document-preview";
+import { ProgressBar } from "@/components/ui/progress";
 import { formatMoney } from "@/lib/utils";
 import {
   FIELD_SPECS,
@@ -347,8 +348,12 @@ export function ReviewCockpit({
       </div>
 
       {busy && (
-        <div className="bg-accent-soft px-5 py-1.5 text-xs font-medium text-accent">
-          {busy}
+        <div className="bg-accent-soft px-5 py-2 text-xs font-medium text-accent">
+          <div className="flex items-center gap-2">
+            <Loader2 size={13} className="animate-spin" />
+            {busy}
+          </div>
+          <ProgressBar className="mt-1.5" />
         </div>
       )}
       {error && (
@@ -403,6 +408,20 @@ function EmptyExtraction({
   onExtract: () => void;
   busy: boolean;
 }) {
+  if (busy) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center text-center">
+        <Sparkles size={32} className="mb-3 animate-pulse text-accent" />
+        <h2 className="text-base font-semibold">Reading the document…</h2>
+        <p className="mt-1 max-w-xs text-sm text-muted">
+          Extracting vendor, dates, amounts and line items. A local vision model
+          can take up to a minute.
+        </p>
+        <ProgressBar className="mt-4 w-48" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
       <Sparkles size={32} className="mb-3 text-accent" />
