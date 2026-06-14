@@ -71,6 +71,14 @@ export class OllamaProvider implements ExtractionProvider {
       userContent = `Extract the accounts-payable fields from this ${input.kind}.`;
     } else {
       rawText = await documentToText(input.bytes, input.mimeType, input.page);
+      // Guard against fabrication: with little/no source text the model will
+      // happily invent a plausible-but-fake invoice. Fail clearly instead.
+      if (rawText.replace(/\s+/g, "").length < 15) {
+        throw new ExtractionError(
+          "No machine-readable text found — this looks like a scanned/image PDF. Convert it to an image and use a vision model (OLLAMA_MODE=vision), or upload a digital (text) PDF.",
+          "ollama",
+        );
+      }
       userContent = `Extract the accounts-payable fields from this ${input.kind}.\n\nDocument text:\n${rawText}`;
     }
 
