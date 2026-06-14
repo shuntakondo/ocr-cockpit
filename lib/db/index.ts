@@ -32,9 +32,11 @@ CREATE TABLE IF NOT EXISTS documents (
   status            TEXT NOT NULL DEFAULT 'uploaded',
   extraction        JSONB,
   notes             TEXT,
+  page              INTEGER,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS page INTEGER;
 CREATE INDEX IF NOT EXISTS idx_documents_status     ON documents (status);
 CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents (created_at DESC);
 CREATE TABLE IF NOT EXISTS audit_log (

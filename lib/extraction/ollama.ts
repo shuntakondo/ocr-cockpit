@@ -70,7 +70,7 @@ export class OllamaProvider implements ExtractionProvider {
       images = [Buffer.from(prepared.bytes).toString("base64")];
       userContent = `Extract the accounts-payable fields from this ${input.kind}.`;
     } else {
-      rawText = await documentToText(input.bytes, input.mimeType);
+      rawText = await documentToText(input.bytes, input.mimeType, input.page);
       userContent = `Extract the accounts-payable fields from this ${input.kind}.\n\nDocument text:\n${rawText}`;
     }
 

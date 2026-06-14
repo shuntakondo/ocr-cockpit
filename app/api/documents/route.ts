@@ -6,6 +6,7 @@ import {
   addAudit,
 } from "@/lib/db/repository";
 import { saveUpload, contentTypeFor, sanitizeFilename } from "@/lib/storage";
+import { pdfPageCount } from "@/lib/ocr/pdf";
 import type { DocumentKind, DocumentStatus } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -77,5 +78,16 @@ export async function POST(req: NextRequest) {
   });
   await addAudit(doc.id, "uploaded", `Uploaded ${original}`);
 
-  return NextResponse.json({ document: doc }, { status: 201 });
+  // Page count lets the client offer to split a multi-page PDF into one
+  // document per page.
+  let pageCount = 1;
+  if (mimeType === "application/pdf") {
+    try {
+      pageCount = await pdfPageCount(bytes);
+    } catch {
+      pageCount = 1;
+    }
+  }
+
+  return NextResponse.json({ document: doc, pageCount }, { status: 201 });
 }

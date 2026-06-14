@@ -45,6 +45,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       mimeType: doc.mimeType,
       filename: doc.originalFilename,
       kind: doc.kind,
+      page: doc.page,
     });
 
     // Re-apply a previously confirmed rule for this vendor, if any.

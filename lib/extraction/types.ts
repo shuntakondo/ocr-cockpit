@@ -6,6 +6,8 @@ export interface ExtractionInput {
   mimeType: string;
   filename: string;
   kind: DocumentKind;
+  /** 1-based page for split multi-page PDFs; null/undefined = whole file. */
+  page?: number | null;
 }
 
 /**

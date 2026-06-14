@@ -22,6 +22,7 @@ interface DocumentRow {
   status: string;
   extraction: unknown;
   notes: string | null;
+  page: number | null;
   created_at: unknown;
   updated_at: unknown;
 }
@@ -56,6 +57,7 @@ function rowToDocument(row: DocumentRow): DocumentRecord {
     status: row.status as DocumentStatus,
     extraction: parseExtraction(row.extraction),
     notes: row.notes,
+    page: row.page == null ? null : Number(row.page),
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
   };
@@ -70,6 +72,7 @@ export interface NewDocument {
   kind: DocumentKind;
   source: DocumentSource;
   sizeBytes: number;
+  page?: number | null;
 }
 
 export async function createDocument(
@@ -79,8 +82,8 @@ export async function createDocument(
   const id = crypto.randomUUID();
   const { rows } = await db.query<DocumentRow>(
     `INSERT INTO documents
-       (id, filename, original_filename, mime_type, kind, source, size_bytes, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'uploaded')
+       (id, filename, original_filename, mime_type, kind, source, size_bytes, status, page)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'uploaded', $8)
      RETURNING *`,
     [
       id,
@@ -90,6 +93,7 @@ export async function createDocument(
       input.kind,
       input.source,
       input.sizeBytes,
+      input.page ?? null,
     ],
   );
   return rowToDocument(rows[0]);
@@ -170,6 +174,19 @@ export async function deleteDocument(id: string): Promise<void> {
   const db = await getDb();
   await db.query(`DELETE FROM documents WHERE id = $1`, [id]);
   await db.query(`DELETE FROM audit_log WHERE document_id = $1`, [id]);
+}
+
+/** How many OTHER documents reference the same stored file (split pages share one). */
+export async function countOtherWithFilename(
+  filename: string,
+  excludeId: string,
+): Promise<number> {
+  const db = await getDb();
+  const { rows } = await db.query<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM documents WHERE filename = $1 AND id <> $2`,
+    [filename, excludeId],
+  );
+  return Number(rows[0]?.n ?? 0);
 }
 
 export async function countByStatus(): Promise<Record<string, number>> {

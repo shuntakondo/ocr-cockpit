@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   addAudit,
+  countOtherWithFilename,
   deleteDocument,
   getDocument,
   listAudit,
@@ -88,7 +89,11 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext) {
   const { id } = await ctx.params;
   const doc = await getDocument(id);
   if (!doc) return NextResponse.json({ error: "Not found." }, { status: 404 });
-  if (doc.source === "upload") await deleteUpload(doc.filename);
+  // Only remove the file if no other document references it (split pages share one).
+  if (doc.source === "upload") {
+    const others = await countOtherWithFilename(doc.filename, id);
+    if (others === 0) await deleteUpload(doc.filename);
+  }
   await deleteDocument(id);
   return NextResponse.json({ ok: true });
 }
