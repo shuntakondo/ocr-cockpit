@@ -22,7 +22,8 @@ interface UploadItem {
 interface UploadModalProps {
   open: boolean;
   onClose: () => void;
-  onUploaded: () => void;
+  /** Called after uploads finish, with the IDs of the documents created. */
+  onUploaded: (uploadedIds: string[]) => void;
 }
 
 const ACCEPT = "application/pdf,image/*";
@@ -64,6 +65,7 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
     setItems(files.map((f) => ({ name: f.name, status: "uploading" as const })));
     setBusy(true);
     let anyError = false;
+    const uploadedIds: string[] = [];
 
     await Promise.all(
       files.map(async (file, i) => {
@@ -75,6 +77,8 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
             const data = await res.json().catch(() => ({}));
             throw new Error(data.error || `Upload failed (HTTP ${res.status})`);
           }
+          const data = await res.json().catch(() => null);
+          if (data?.document?.id) uploadedIds.push(data.document.id as string);
           setItems((prev) =>
             prev.map((it, idx) => (idx === i ? { ...it, status: "done" } : it)),
           );
@@ -96,7 +100,7 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
     );
 
     setBusy(false);
-    onUploaded();
+    onUploaded(uploadedIds);
     // Close automatically only if everything succeeded; otherwise keep the
     // errors visible so the user can see what was rejected.
     if (!anyError) onClose();

@@ -58,7 +58,14 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
     });
   }
 
-  function handleUploaded() {
+  function handleUploaded(uploadedIds: string[]) {
+    // Single upload → jump straight to its review screen (preview + Extract
+    // button). Extraction is NOT auto-run — the user confirms and presses
+    // Extract themselves (avoids wasted/paid AI calls on a wrong file).
+    if (uploadedIds.length === 1) {
+      router.push(`/documents/${uploadedIds[0]}`);
+      return;
+    }
     setFilter("all");
     void refresh("all");
   }
