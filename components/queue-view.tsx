@@ -1,17 +1,11 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Upload,
-  Download,
-  AlertTriangle,
-  Loader2,
-  FileText,
-  Inbox,
-} from "lucide-react";
+import { Upload, Download, AlertTriangle, FileText, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
+import { UploadModal } from "@/components/upload-modal";
 import { cn, formatMoney } from "@/lib/utils";
 import {
   DOCUMENT_STATUSES,
@@ -44,9 +38,8 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
   const [documents, setDocuments] = useState(initialDocuments);
   const [counts, setCounts] = useState(initialCounts);
   const [filter, setFilter] = useState<DocumentStatus | "all">("all");
-  const [uploading, setUploading] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [, startTransition] = useTransition();
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -65,21 +58,9 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
     });
   }
 
-  async function onFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    try {
-      for (const file of Array.from(files)) {
-        const form = new FormData();
-        form.append("file", file);
-        await fetch("/api/documents", { method: "POST", body: form });
-      }
-      await refresh("all");
-      setFilter("all");
-    } finally {
-      setUploading(false);
-      if (fileInput.current) fileInput.current.value = "";
-    }
+  function handleUploaded() {
+    setFilter("all");
+    void refresh("all");
   }
 
   const exportHref = (format: "csv" | "accounting") => {
@@ -113,29 +94,22 @@ export function QueueView({ initialDocuments, initialCounts }: QueueViewProps) {
           >
             <Download size={15} /> Accounting CSV
           </a>
-          <input
-            ref={fileInput}
-            type="file"
-            multiple
-            accept="application/pdf,image/*"
-            className="hidden"
-            onChange={(e) => onFiles(e.target.files)}
-          />
           <Button
             variant="primary"
-            onClick={() => fileInput.current?.click()}
-            disabled={uploading}
+            onClick={() => setUploadOpen(true)}
             aria-label="Upload documents (PDF or image)"
           >
-            {uploading ? (
-              <Loader2 size={15} className="animate-spin" />
-            ) : (
-              <Upload size={15} />
-            )}
+            <Upload size={15} />
             Upload
           </Button>
         </div>
       </div>
+
+      <UploadModal
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        onUploaded={handleUploaded}
+      />
 
       {/* Status filter tabs */}
       <div className="mb-3 flex flex-wrap gap-1.5">
