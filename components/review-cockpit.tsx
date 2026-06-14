@@ -284,7 +284,9 @@ export function ReviewCockpit({
             <StatusBadge status={doc.status} />
             {doc.page != null && (
               <span className="rounded-full border border-border px-1.5 py-0.5 text-[11px] text-muted">
-                page {doc.page}
+                {doc.pageEnd && doc.pageEnd > doc.page
+                  ? `pages ${doc.page}–${doc.pageEnd}`
+                  : `page ${doc.page}`}
               </span>
             )}
             {dirty && (

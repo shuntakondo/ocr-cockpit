@@ -21,13 +21,14 @@ export async function documentToText(
   bytes: Uint8Array,
   mimeType: string,
   page?: number | null,
+  pageEnd?: number | null,
 ): Promise<string> {
   if (mimeType === "application/pdf") {
-    // Digital PDFs carry exact embedded text. A `page` (from a split document)
-    // limits extraction to that single page. (Scanned PDFs with no text layer
-    // need page rasterization, which tesseract can't do on PDF bytes — that path
-    // is a known gap; convert such PDFs to an image for now.)
-    return extractPdfText(bytes, page ?? undefined);
+    // Digital PDFs carry exact embedded text. A page range (from a split
+    // document) limits extraction to those pages. (Scanned PDFs with no text
+    // layer need page rasterization, which tesseract can't do on PDF bytes —
+    // that path is a known gap; convert such PDFs to an image for now.)
+    return extractPdfText(bytes, page ?? undefined, pageEnd ?? undefined);
   }
   if (mimeType === "image/svg+xml") {
     return extractSvgText(bytes);

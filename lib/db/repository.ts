@@ -23,6 +23,7 @@ interface DocumentRow {
   extraction: unknown;
   notes: string | null;
   page: number | null;
+  page_end: number | null;
   created_at: unknown;
   updated_at: unknown;
 }
@@ -58,6 +59,7 @@ function rowToDocument(row: DocumentRow): DocumentRecord {
     extraction: parseExtraction(row.extraction),
     notes: row.notes,
     page: row.page == null ? null : Number(row.page),
+    pageEnd: row.page_end == null ? null : Number(row.page_end),
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
   };
@@ -73,6 +75,7 @@ export interface NewDocument {
   source: DocumentSource;
   sizeBytes: number;
   page?: number | null;
+  pageEnd?: number | null;
 }
 
 export async function createDocument(
@@ -82,8 +85,8 @@ export async function createDocument(
   const id = crypto.randomUUID();
   const { rows } = await db.query<DocumentRow>(
     `INSERT INTO documents
-       (id, filename, original_filename, mime_type, kind, source, size_bytes, status, page)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'uploaded', $8)
+       (id, filename, original_filename, mime_type, kind, source, size_bytes, status, page, page_end)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'uploaded', $8, $9)
      RETURNING *`,
     [
       id,
@@ -94,6 +97,7 @@ export async function createDocument(
       input.source,
       input.sizeBytes,
       input.page ?? null,
+      input.pageEnd ?? null,
     ],
   );
   return rowToDocument(rows[0]);

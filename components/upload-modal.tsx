@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 
 type ItemStatus = "uploading" | "done" | "error";
 interface UploadItem {
@@ -33,11 +32,7 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
   const [dragActive, setDragActive] = useState(false);
   const [items, setItems] = useState<UploadItem[]>([]);
   const [busy, setBusy] = useState(false);
-  const [pendingSplit, setPendingSplit] = useState<{
-    id: string;
-    name: string;
-    pageCount: number;
-  } | null>(null);
+  const [phase, setPhase] = useState<"importing" | "analyzing" | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +42,7 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
       setItems([]);
       setDragActive(false);
       setBusy(false);
-      setPendingSplit(null);
+      setPhase(null);
       const t = setTimeout(() => dropRef.current?.focus(), 50);
       return () => clearTimeout(t);
     }
@@ -71,6 +66,7 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
 
     setItems(files.map((f) => ({ name: f.name, status: "uploading" as const })));
     setBusy(true);
+    setPhase("importing");
     let anyError = false;
     const results: { id: string; pageCount: number }[] = [];
 
@@ -108,44 +104,35 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
       }),
     );
 
-    setBusy(false);
-
-    // A single multi-page PDF → ask whether each page is a separate invoice.
-    if (files.length === 1 && results.length === 1 && results[0].pageCount > 1) {
-      setPendingSplit({
-        id: results[0].id,
-        name: files[0].name,
-        pageCount: results[0].pageCount,
-      });
-      return; // keep the modal open for the choice
+    // Auto-detect invoice boundaries in any multi-page PDF and split it into
+    // one document per invoice — no prompt. A single-invoice PDF (even multi-
+    // page) is left as one document.
+    let finalIds = results.map((r) => r.id);
+    const multi = results.filter((r) => r.pageCount > 1);
+    if (multi.length > 0) {
+      setPhase("analyzing");
+      const replaced: Record<string, string[]> = {};
+      await Promise.all(
+        multi.map(async (r) => {
+          try {
+            const res = await fetch(`/api/documents/${r.id}/autosplit`, { method: "POST" });
+            const data = await res.json().catch(() => ({}));
+            replaced[r.id] =
+              Array.isArray(data.ids) && data.ids.length ? data.ids : [r.id];
+          } catch {
+            replaced[r.id] = [r.id];
+          }
+        }),
+      );
+      finalIds = results.flatMap((r) => replaced[r.id] ?? [r.id]);
     }
 
-    onUploaded(results.map((r) => r.id));
+    setBusy(false);
+    setPhase(null);
+    onUploaded(finalIds);
     // Close automatically only if everything succeeded; otherwise keep the
     // errors visible so the user can see what was rejected.
     if (!anyError) onClose();
-  }
-
-  async function splitPending() {
-    if (!pendingSplit) return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/documents/${pendingSplit.id}/split`, {
-        method: "POST",
-      });
-      const data = await res.json().catch(() => ({}));
-      const ids: string[] = Array.isArray(data.ids) ? data.ids : [];
-      onUploaded(ids.length ? ids : [pendingSplit.id]);
-      onClose();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function keepPendingAsOne() {
-    if (!pendingSplit) return;
-    onUploaded([pendingSplit.id]);
-    onClose();
   }
 
   return (
@@ -179,37 +166,10 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
           </button>
         </div>
 
-        {pendingSplit && (
-          <div className="rounded-xl border border-border bg-surface-2 p-4 text-center">
-            <FileText size={22} className="mx-auto mb-2 text-accent" />
-            <p className="truncate text-sm font-medium text-ink">
-              {pendingSplit.name}
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              This PDF has {pendingSplit.pageCount} pages. Is each page a separate
-              invoice?
-            </p>
-            <div className="mt-4 flex justify-center gap-2">
-              <Button
-                variant="secondary"
-                onClick={keepPendingAsOne}
-                disabled={busy}
-              >
-                Keep as one
-              </Button>
-              <Button variant="primary" onClick={splitPending} disabled={busy}>
-                Split into {pendingSplit.pageCount} documents
-              </Button>
-            </div>
-            {busy && <ProgressBar className="mt-3" />}
-          </div>
-        )}
-
         {/* Drop zone — a div (buttons are flaky file-drop targets), made
             keyboard-accessible with role/tabIndex. Inner content is
             pointer-events-none so drag events always target the zone itself
             (avoids dragenter/leave flicker over children). */}
-        {!pendingSplit && (
         <div
           ref={dropRef}
           role="button"
@@ -265,7 +225,9 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
             {busy ? (
               <>
                 <span className="text-sm font-medium text-ink">
-                  Importing {items.length} file{items.length === 1 ? "" : "s"}…
+                  {phase === "analyzing"
+                    ? "Detecting invoices in the PDF…"
+                    : `Importing ${items.length} file${items.length === 1 ? "" : "s"}…`}
                 </span>
                 <ProgressBar className="mt-1 w-2/3" />
               </>
@@ -281,7 +243,6 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
             )}
           </div>
         </div>
-        )}
 
         <input
           ref={fileInput}
@@ -293,7 +254,7 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
         />
 
         {/* Per-file progress / results */}
-        {!pendingSplit && items.length > 0 && (
+        {items.length > 0 && (
           <ul className="mt-4 space-y-1.5">
             {items.map((it, i) => (
               <li

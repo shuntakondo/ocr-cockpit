@@ -79,8 +79,10 @@ export interface DocumentRecord {
   status: DocumentStatus;
   extraction: ExtractionData | null;
   notes: string | null;
-  /** For a page split out of a multi-page PDF: 1-based page number. null = whole file. */
+  /** First page of this document's range within a multi-page PDF (1-based). null = whole file. */
   page: number | null;
+  /** Last page of the range. null when single-page (== page) or whole file. */
+  pageEnd: number | null;
   createdAt: string;
   updatedAt: string;
 }

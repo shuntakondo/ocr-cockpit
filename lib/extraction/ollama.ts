@@ -70,7 +70,7 @@ export class OllamaProvider implements ExtractionProvider {
       images = [Buffer.from(prepared.bytes).toString("base64")];
       userContent = `Extract the accounts-payable fields from this ${input.kind}.`;
     } else {
-      rawText = await documentToText(input.bytes, input.mimeType, input.page);
+      rawText = await documentToText(input.bytes, input.mimeType, input.page, input.pageEnd);
       // Guard against fabrication: with little/no source text the model will
       // happily invent a plausible-but-fake invoice. Fail clearly instead.
       if (rawText.replace(/\s+/g, "").length < 15) {

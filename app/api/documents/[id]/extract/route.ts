@@ -46,6 +46,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       filename: doc.originalFilename,
       kind: doc.kind,
       page: doc.page,
+      pageEnd: doc.pageEnd,
     });
 
     // Re-apply a previously confirmed rule for this vendor, if any.
