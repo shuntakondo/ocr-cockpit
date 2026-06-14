@@ -4,19 +4,23 @@ interface DocumentPreviewProps {
   documentId: string;
   mimeType: string;
   filename: string;
+  page?: number | null;
 }
 
 export function DocumentPreview({
   documentId,
   mimeType,
   filename,
+  page,
 }: DocumentPreviewProps) {
   const src = `/api/documents/${documentId}/file`;
 
   if (mimeType === "application/pdf") {
+    // Open at the document's page (split multi-page PDFs share one file).
+    const pdfSrc = page ? `${src}#page=${page}` : src;
     return (
       <iframe
-        src={src}
+        src={pdfSrc}
         title={filename}
         className="h-full w-full rounded-lg border border-border bg-white"
       />

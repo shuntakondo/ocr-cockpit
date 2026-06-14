@@ -278,6 +278,11 @@ export function ReviewCockpit({
               {extraction?.vendor.value ?? doc.originalFilename}
             </span>
             <StatusBadge status={doc.status} />
+            {doc.page != null && (
+              <span className="rounded-full border border-border px-1.5 py-0.5 text-[11px] text-muted">
+                page {doc.page}
+              </span>
+            )}
             {dirty && (
               <span className="text-[11px] font-medium text-warn">
                 unsaved
@@ -397,6 +402,7 @@ function DocumentPreviewFrame({ doc }: { doc: DocumentRecord }) {
       documentId={doc.id}
       mimeType={doc.mimeType}
       filename={doc.originalFilename}
+      page={doc.page}
     />
   );
 }
