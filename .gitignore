@@ -30,3 +30,6 @@ npm-debug.log*
 
 # generated sample files are committed (self-authored fakes); uploads are not
 !/storage/samples/
+
+# sales material (pitch, pricing, proposal copy) — local only, never publish
+/sales/
