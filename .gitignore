@@ -21,6 +21,9 @@ next-env.d.ts
 /.pglite/
 *.db
 
+# tesseract.js language data cached at runtime
+*.traineddata
+
 # os / editor
 .DS_Store
 .vscode/*
