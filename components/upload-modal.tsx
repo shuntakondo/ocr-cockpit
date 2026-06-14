@@ -31,7 +31,7 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const dropRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
 
   // Reset and focus the drop zone whenever the modal opens.
   useEffect(() => {
@@ -132,42 +132,63 @@ export function UploadModal({ open, onClose, onUploaded }: UploadModalProps) {
           </button>
         </div>
 
-        {/* Drop zone (also click-to-browse, keyboard-accessible) */}
-        <button
+        {/* Drop zone — a div (buttons are flaky file-drop targets), made
+            keyboard-accessible with role/tabIndex. Inner content is
+            pointer-events-none so drag events always target the zone itself
+            (avoids dragenter/leave flicker over children). */}
+        <div
           ref={dropRef}
-          type="button"
+          role="button"
+          tabIndex={0}
+          aria-label="Drag and drop files here, or activate to browse"
           onClick={() => fileInput.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              fileInput.current?.click();
+            }
+          }}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragActive(true);
+          }}
           onDragOver={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             setDragActive(true);
           }}
           onDragLeave={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             setDragActive(false);
           }}
           onDrop={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             setDragActive(false);
             handleFiles(e.dataTransfer.files);
           }}
           className={cn(
-            "flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition",
+            "flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition",
             dragActive
               ? "border-accent bg-accent-soft"
               : "border-border bg-surface-2 hover:bg-accent-soft/40",
           )}
         >
-          <UploadCloud
-            size={28}
-            className={dragActive ? "text-accent" : "text-muted"}
-          />
-          <span className="text-sm font-medium text-ink">
-            Drag &amp; drop invoices or receipts here
-          </span>
-          <span className="text-xs text-muted">
-            or click to browse — PDF, PNG, JPG (max 15 MB each)
-          </span>
-        </button>
+          <div className="pointer-events-none flex flex-col items-center gap-2">
+            <UploadCloud
+              size={28}
+              className={dragActive ? "text-accent" : "text-muted"}
+            />
+            <span className="text-sm font-medium text-ink">
+              Drag &amp; drop invoices or receipts here
+            </span>
+            <span className="text-xs text-muted">
+              or click to browse — PDF, PNG, JPG (max 15 MB each)
+            </span>
+          </div>
+        </div>
 
         <input
           ref={fileInput}
