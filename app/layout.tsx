@@ -15,6 +15,7 @@ const PROVIDER_LABEL: Record<string, string> = {
   ollama: "Ollama (local)",
   azure: "Azure Document Intelligence",
   gemini: "Gemini (Google)",
+  groq: "Groq (Llama 4)",
 };
 
 export default function RootLayout({

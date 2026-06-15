@@ -4,6 +4,7 @@ import { MockProvider } from "@/lib/extraction/mock";
 import { OllamaProvider } from "@/lib/extraction/ollama";
 import { AzureProvider } from "@/lib/extraction/azure";
 import { GeminiProvider } from "@/lib/extraction/gemini";
+import { GroqProvider } from "@/lib/extraction/groq";
 
 export type { ExtractionProvider, ExtractionInput } from "@/lib/extraction/types";
 
@@ -17,6 +18,8 @@ export function getProvider(name?: string): ExtractionProvider {
       return new AzureProvider();
     case "gemini":
       return new GeminiProvider();
+    case "groq":
+      return new GroqProvider();
     case "mock":
     default:
       return new MockProvider();
@@ -25,6 +28,6 @@ export function getProvider(name?: string): ExtractionProvider {
 
 export function activeProviderName(): ProviderName {
   const p = (process.env.EXTRACTION_PROVIDER || "mock").toLowerCase();
-  if (p === "ollama" || p === "azure" || p === "gemini") return p;
+  if (p === "ollama" || p === "azure" || p === "gemini" || p === "groq") return p;
   return "mock";
 }

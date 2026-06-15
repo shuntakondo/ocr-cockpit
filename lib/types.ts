@@ -25,7 +25,7 @@ export type DocumentKind = "invoice" | "receipt";
 
 export type DocumentSource = "upload" | "sample" | "gmail" | "drive";
 
-export type ProviderName = "mock" | "ollama" | "azure" | "gemini";
+export type ProviderName = "mock" | "ollama" | "azure" | "gemini" | "groq";
 
 /**
  * A single reviewable field. Carries the human-facing `value`, the provider's
