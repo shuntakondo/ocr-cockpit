@@ -107,6 +107,7 @@ Set `EXTRACTION_PROVIDER` in `.env` (see `.env.example`).
 |---|---|---|
 | `mock` (default) | free | Deterministic. Returns the sample ground truth with a couple of fields perturbed/low-confidence so the review flow is realistic; synthesizes plausible data for real uploads. No services needed. |
 | `ollama` | free / local | **`OLLAMA_MODE=vision`** sends the image to a multimodal model — best accuracy, layout-aware, reads Japanese. Recommended: `ollama pull qwen2.5vl:7b`. SVGs are rasterized and large images downscaled automatically (`OLLAMA_MAX_IMAGE_PX`) so inference stays fast. **`OLLAMA_MODE=text`** OCRs the document (unpdf / tesseract.js) then structures it with a text model — no extra download (works with `llama3.2`), good for English. **PDFs always route through text extraction** (digital PDFs read exactly; scanned PDFs without a text layer should be converted to an image — page rasterization is a known gap). |
+| `gemini` | free tier | **Fast** (a few seconds/doc). Reads whole PDFs natively — digital *and* scanned — and images. Get a free key at [aistudio.google.com](https://aistudio.google.com/app/apikey); set `GEMINI_API_KEY` (model `gemini-2.5-flash` by default). Best choice when local extraction is too slow. |
 | `azure` | paid | Azure AI Document Intelligence `prebuilt-invoice` / `prebuilt-receipt`. Returns field-level confidence natively. Needs `AZURE_DI_ENDPOINT` + `AZURE_DI_KEY`. |
 
 You can override per request: `POST /api/documents/:id/extract?provider=ollama`.

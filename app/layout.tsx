@@ -14,6 +14,7 @@ const PROVIDER_LABEL: Record<string, string> = {
   mock: "Mock (demo)",
   ollama: "Ollama (local)",
   azure: "Azure Document Intelligence",
+  gemini: "Gemini (Google)",
 };
 
 export default function RootLayout({
